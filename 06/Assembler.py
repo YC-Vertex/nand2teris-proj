@@ -91,8 +91,8 @@ def saveFile(path, macCode):
     '''
     try:
         file = open(path, 'w')
-        for lines in macCode:
-            file.write(lines)
+        for line in macCode:
+            file.write(line)
             file.write('\n')
         print('Machine codes are successfully saved to %s' % path)
     except IOError:
@@ -134,11 +134,11 @@ def sym2numReplace(content, table):
         content (list): translated asm code
     '''
     newContent = []
-    for lines in content:
-        if lines[0] == '@':
-            if table.__contains__(lines[1:]):
-                lines = '@' + table[lines[1:]]
-        newContent.append(lines)
+    for line in content:
+        if line[0] == '@':
+            if table.__contains__(line[1:]):
+                line = '@' + table[line[1:]]
+        newContent.append(line)
     return newContent
 
 def constParse(content):
@@ -166,10 +166,10 @@ def pcVarParse(content):
     '''
     pcVarTable = {}
     lineCount = 0;
-    for lines in content:
-        if lines[0] == '(' and lines[-1] == ')':
-            if not pcVarTable.__contains__(lines[1:-1]):
-                pcVarTable[lines[1:-1]] = str(lineCount)
+    for line in content:
+        if line[0] == '(' and line[-1] == ')':
+            if not pcVarTable.__contains__(line[1:-1]):
+                pcVarTable[line[1:-1]] = str(lineCount)
             else:
                 print('Error: Bad Syntax: a symbol representing multiple lines')
         else:
@@ -192,13 +192,14 @@ def memVarParse(content):
     '''
     memVarTable = {}
     val = 16
-    for lines in content:
-        if lines[0] == '@' and (not lines[1:].isnumeric()):
-            if not memVarTable.__contains__(lines[1:]):
-                memVarTable[lines[1:]] = str(val)
+    for line in content:
+        if line[0] == '@' and (not line[1:].isnumeric()):
+            if not memVarTable.__contains__(line[1:]):
+                memVarTable[line[1:]] = str(val)
                 val = val + 1
  
     return sym2numReplace(content, memVarTable), memVarTable
+
 
 
 def parse(file):
@@ -212,12 +213,12 @@ def parse(file):
         asmCode (list): a list of strings containing every pre-processed asm instruction lines
     '''
     asmCode = []
-    for lines in file.readlines():
+    for line in file.readlines():
         # delete comments and spaces
-        lines = preProcess(lines)
+        line = preProcess(line)
         # insert the processed lines into the content list
-        if lines != '':
-            asmCode.append(lines)
+        if line != '':
+            asmCode.append(line)
     asmCode = constParse(asmCode)
     print(asmCode)
     asmCode, pcVarTable = pcVarParse(asmCode)
