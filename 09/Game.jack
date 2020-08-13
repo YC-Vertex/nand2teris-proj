@@ -1,0 +1,36 @@
+class Game {
+    field GameEntry ge;
+    field GameMain gm;
+    field GameScore gs;
+    field boolean exit;
+    field boolean restart;
+    field int score;
+
+    constructor Game new() {
+        let ge = GameEntry.new();
+        let gm = GameMain.new();
+        let gs = GameScore.new();
+        let exit = false;
+        let restart = true;
+        return this;
+    }
+
+    method void run() {
+        let exit = ge.run();
+        if (~exit) {
+            while (restart) {
+                let score = gm.run();
+                let restart = gs.run(score);
+            }
+        }
+        return;
+    }
+
+    method void dispose() {
+        do ge.dispose();
+        do gm.dispose();
+        do gs.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

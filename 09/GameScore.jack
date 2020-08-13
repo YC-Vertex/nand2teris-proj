@@ -1,0 +1,35 @@
+class GameScore {
+    field int key;
+
+    constructor GameScore new() {
+        return this;
+    }
+
+    method boolean run(int score) {
+        do show(score);
+        do Sys.wait(1000);
+
+        let key = Keyboard.keyPressed();
+        while (key = 0) {
+            let key = Keyboard.keyPressed();
+        }
+
+        do Screen.clearScreen();
+        if (key = 82) { return true; }
+        else { return false; } 
+    }
+
+    method void show(int score) {
+        do Output.moveCursor(0, 0);
+        do Output.printString("Your score: ");
+        do Output.printInt(score);
+        do Output.println();
+        do Output.printString("Press r to restart, press any other key to exit.");
+        return;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

@@ -1,18 +1,22 @@
 commandTypeTable = {
-    'add':  'C_ARITHMETIC',
-    'sub':  'C_ARITHMETIC',
-    'neg':  'C_ARITHMETIC',
-    'and':  'C_ARITHMETIC',
-    'or':   'C_ARITHMETIC',
-    'not':  'C_ARITHMETIC',
-    'eq':   'C_ARITHMETIC',
-    'lt':   'C_ARITHMETIC',
-    'gt':   'C_ARITHMETIC',
-    'push': 'C_PUSH',
-    'pop':  'C_POP',
+    'add':      'C_ARITHMETIC',
+    'sub':      'C_ARITHMETIC',
+    'neg':      'C_ARITHMETIC',
+    'and':      'C_ARITHMETIC',
+    'or':       'C_ARITHMETIC',
+    'not':      'C_ARITHMETIC',
+    'push':     'C_PUSH',
+    'pop':      'C_POP',
+    'label':    'C_LABEL',
+    'if-goto':  'C_IF',
+    'goto':     'C_GOTO',
+    'call':     'C_CALL',
+    'function': 'C_FUNCTION',
+    'return':   'C_RETURN'
 }
 
 JUMPFLAG = 0
+RETURNFLAG = 0
 
 
 
@@ -24,6 +28,8 @@ def openFile(path, iotype):
     except IOError:
         print('Failed to load %s' % path)
         return 0
+
+
 
 class Parser:
     def __init__(self, filepath):
@@ -65,6 +71,8 @@ class Parser:
         
     def closeFile(self):
         self.file.close()
+
+
 
 class CodeWriter:
     def __init__(self, filepath):
@@ -183,8 +191,65 @@ class CodeWriter:
             self.file.write(line + '\n')
         self.file.write('\n')
         
+    def writeLabel(self, label):
+        self.file.write('(' + label + ')\n')
+        
+    def writeIf(self, label):
+        lines = ['@SP', 'M=M-1', 'A=M', 'D=M', '@' + label, 'D;JNE']
+        for line in lines:
+            self.file.write(line + '\n')
+        self.file.write('\n')
+        
+    def writeGoto(self, label):
+        lines = ['@SP', 'A=M-1', 'D=M', '@' + label, 'D;JMP']
+        for line in lines:
+            self.file.write(line + '\n')
+        self.file.write('\n')
+        
+    def writeFunction(self, functionName, numlocals):
+        lines = ['(' + functionName + ')', '@LCL', 'D=M', '@SP', 'M=D']
+        for line in lines:
+            self.file.write(line + '\n')
+        self.file.write('\n')
+        
+        for i in range(0, int(numlocals)):  
+            lines = ['@SP', 'A=M', 'M=0', 'D=A+1', '@SP', 'M=D']
+            for line in lines:
+                self.file.write(line + '\n')
+            self.file.write('\n')
+            
+    def writeReturn(self):
+        lines = ['@LCL', 'D=M', '@R13', 'M=D', \
+            '@5', 'A=D-A', 'D=M', '@R14', 'M=D', \
+            '@SP', 'M=M-1', 'A=M', 'D=M', '@ARG', 'A=M', 'M=D', \
+            '@ARG', 'D=M+1', '@SP', 'M=D', \
+            '@R13', 'A=M-1', 'D=M', '@THAT', 'M=D', \
+            '@13', 'D=M', '@2', 'A=D-A', 'D=M', '@THIS', 'M=D', \
+            '@13', 'D=M', '@3', 'A=D-A', 'D=M', '@ARG', 'M=D', \
+            '@13', 'D=M', '@4', 'A=D-A', 'D=M', '@LCL', 'M=D', \
+            '@14', 'A=M', '0;JMP']
+        for line in lines:
+            self.file.write(line + '\n')
+        self.file.write('\n')
+            
+    def writeCall(self, functionName, numArgs):  
+        global RETURNFLAG
+        lines = ['@return_address' + str(RETURNFLAG), 'D=A', '@SP', 'A=M', 'M=D', '@SP', 'M=M+1', \
+            '@LCL', 'D=M', '@SP', 'A=M', 'M=D', '@SP', 'M=M+1', \
+            '@ARG', 'D=M', '@SP', 'A=M', 'M=D', '@SP', 'M=M+1', \
+            '@THIS', 'D=M', '@SP', 'A=M', 'M=D', '@SP', 'M=M+1', \
+            '@THAT', 'D=M', '@SP', 'A=M', 'M=D', '@SP', 'M=M+1', \
+            '@' + str(numArgs), 'D=A', '@5', 'D=D+A', '@SP', 'D=M-D', '@ARG', 'M=D', '@SP', 'D=M', '@LCL', 'M=D', \
+            '@' + functionName, '0;JMP', '(return_address' + str(RETURNFLAG) + ')']
+        for line in lines:
+            self.file.write(line + '\n')
+        self.file.write('\n')
+        RETURNFLAG += 1 
+        
     def closeFile(self):
         self.file.close()
+        
+        
 
 if __name__ == '__main__':
     infilePath = input('Input file: ')
@@ -196,11 +261,24 @@ if __name__ == '__main__':
     while p.hasMoreCommands():
         p.advance()
         ct = p.commandType()
-        if ct != 'C_RETURN':
-            if ct == 'C_ARITHMETIC':
-                c.writeArithmetic(p.arg1())
-            elif ct == 'C_PUSH' or ct == 'C_POP':
-                c.writePushPop(ct, p.arg1(), p.arg2())
-                
+        if ct == 'C_ARITHMETIC':
+            c.writeArithmetic(p.arg1())
+        elif ct == 'C_PUSH' or ct == 'C_POP':
+            c.writePushPop(ct, p.arg1(), p.arg2())
+        elif ct == 'C_ARITHMETIC':
+            c.writeArithmetic(p.arg1())
+        elif ct == 'C_IF':
+            c.writeIf(p.arg1())
+        elif ct == 'C_LABEL':
+            c.writeLabel(p.arg1())
+        elif ct == 'C_GOTO':
+            c.writeGoto(p.arg1())
+        elif ct == 'C_CALL':
+            c.writeCall(p.arg1(), p.arg2())
+        elif ct == 'C_FUNCTION':
+            c.writeFunction(p.arg1(), p.arg2())
+        elif ct == 'C_RETURN':
+            c.writeReturn()
+            
     p.closeFile()
     c.closeFile()

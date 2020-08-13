@@ -1,0 +1,77 @@
+class Memory {
+	static Array memory;
+    /** Initializes memory parameters. */
+    function void init() {
+		let memory = 0;
+		let memory[2048] = 14334;
+		let memory[2049] = 2050;
+		return;
+    }
+
+    /** Returns the value of the main memory at the given address. */
+    function int peek(int address) {
+		return memory[address];
+    }
+
+    /** Sets the value of the main memory at this address
+     *  to the given value. */
+    function void poke(int address, int value) {
+		let memory[address] = value;
+		return;
+	}
+
+    /** finds and allocates from the heap a memory block of the 
+     *  specified size and returns a reference to its base address. */
+    function int alloc(int size) {
+		var int memory;
+		if (size < 0) {
+			do Sys.error(5);
+		}
+		if (size = 0) {
+			let size = 1;
+		}
+		let memory = 2048;
+		while ((memory[0]<size)){
+			let memory = memory[1];
+		}
+		
+		if (memory + size > 16379) {
+			do Sys.error(6);
+		}
+		if (memory[0] > (size+2)) {
+			let memory[size+2] = memory[0] - size - 2;
+			if (memory[1] = (memory + 2)) {
+				let memory[size+3] = memory + size +4;
+				
+			}
+			else {
+				let memory[size+3] = memory[1];
+			}
+			let memory[1] = memory + size + 2;
+		}
+		let memory[0] = 0;
+		return memory + 2;
+    }
+
+    /** De-allocates the given object and frees its space. */
+    function void deAlloc(int object) {  
+		var int memory;
+		var int local1;
+        let memory = object - 2;
+		let local1 = memory[1];
+		if(local1[0] = 0) {
+			let memory[0] = memory[1] - memory - 2;
+		}
+		else {
+			let memory[0] = memory[1] - memory + local1[0];
+			if (local1[1] = (local1 + 2)) {
+				let memory[1] = memory + 2;
+			}
+			else {
+				let memory[1] = local1[1];
+			}
+		}
+		
+        return;  
+    }
+}

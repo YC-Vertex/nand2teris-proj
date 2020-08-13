@@ -1,0 +1,19 @@
+class GameMain {
+    field int key;
+    field int score;
+
+    constructor GameMain new() {
+        let score = 0;
+        return this;
+    }
+
+    method int run() {
+        while ()
+        return score;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

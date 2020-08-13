@@ -1,0 +1,32 @@
+class GameEntry {
+    field int key;
+
+    constructor GameEntry new() {
+        return this;
+    }
+
+    method boolean run() {
+        do show();
+        do Sys.wait(1000);
+
+        let key = Keyboard.keyPressed();
+        while (key = 0) {
+            let key = Keyboard.keyPressed();
+        }
+
+        do Screen.clearScreen();
+        if (key = 81) { return true; }
+        else { return false; } 
+    }
+
+    method void show() {
+        do Output.moveCursor(0, 0);
+        do Output.printString("Press q to exit, press any other key to start.");
+        return;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}
